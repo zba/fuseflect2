@@ -1,0 +1,105 @@
+fuseflect - A FUSE filesystem for local directory mirroring
+
+
+
+Contents:
+
+    1. Introduction
+    2. Platforms
+    3. Setup
+	3.1. Compilation
+	3.2. Installation
+	3.3. Running
+    4. Credits
+    5. License
+    6. Authors
+
+
+1. Introduction
+
+fuseflect is a FUSE filesystem that allows the user to mirror a local directory
+to another, somewhat like using `mount --bind'. Its most important feature is
+that it minimises the time during which the source device is kept in a busy
+state, as it does not keep open files unless it is actually doing something.
+
+
+
+2. Platforms
+
+Currently only the following platforms are supported:
+
+* Linux 2.6.x
+
+fuseflect contains a lot of Linux-specific code, so it will probably fail on any
+other platform.
+
+
+
+3. Setup
+
+3.1. Compilation
+
+Firstly you need the FUSE library and headers (http://fuse.sourceforge.net).
+Afterwards, a simple call to `make' is normally all you will need to compile
+fuseflect:
+
+$ make
+
+You can override the CFLAGS variable to provide optimisation flags e.t.c. The
+DEBUG variable can be used to enable debugging - if you are using gcc, setting
+DEBUG to "-g" would probably do.
+
+
+3.2. Installation
+
+First verify with `make -n install' the installation paths. By default, the
+installation prefix is /usr/local and the fuseflect binary is installed in
+$(prefix)/bin. You can set the prefix and bindir variables to override these
+defaults. Then run `make install' as root to perform the actual installation:
+
+# make install
+
+
+3.3. Running
+
+Please read the FUSE documentation before using fuseflect.
+
+Run `fuseflect -h' to see the various command line options. All you have to do
+in most cases is:
+
+$ fuseflect source_directory/ mountpoint/
+
+If you want to use fuseflect from /etc/fstab, the following example shows its
+use:
+
+fuseflect#/usr/share/doc /fs/vfs/doc fuse defaults 0 0
+
+If you do use fuseflect in your /etc/fstab, you will probably want to add the
+allow_other and default_permissions options. The first option allows non-root
+users to access fuseflect, while the second one activates the in-kernel
+permission checking, since fuseflect does no access control on its own.
+
+WARNING: _NEVER_ USE allow_other WITHOUT default_permissions, OR YOU RISK
+ALLOWING UNPRIVILEDGED PROCESSES TO ACCESS FILES THEY SHOULD NOT BE ABLE TO.
+
+
+
+4. Credits
+
+- Miklos Szeredi <miklos@XXXXXXX.hu> for the fusexmp code and his suggestions
+- Anand Avati <avati@XXXXXXXXX.com> for a bit of sample code
+
+
+
+5. License
+
+fuseflect is released under the GNU General Public License version 2. The full
+text of the license can be found in the COPYING file that should be included in
+the fuseflect distribution.
+
+
+
+6. Authors
+
+Original author:
+	Theodoros V. Kalamatianos <nyb@users.sourceforge.net>

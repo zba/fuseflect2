@@ -1,0 +1,106 @@
+* Why this FUSE module ?
+
+I own a laptop with a couple of external disks and usually have several shells
+in terminal windows laying about. Many of them have their CWD in one of the
+external filesystems. The problem is that these idle shells keep the external
+devices busy just by existing and whenever I needed to switch around the cables,
+or even to suspend the system I had to kill all those processes and then restart
+them. I consider that to be a significant interruption of my work flow.
+
+Therefore, I decided to write a FUSE module to access those files indirectly,
+without keeping open files on the source device.
+
+
+* What about other modules ?
+
+I had a look at the following:
+
+- fusexmp (from the FUSE sources):
+    pros: very simple, it works without handles
+    cons: it mucks up the ownership of new files when used from /etc/fstab, only
+	mirrors the root directory without the ability to select a subdirectory
+	for usability or security reasons.
+
+- bindfs:
+    pros: _VERY_ nice, various very useful features
+    cons: it uses handles, i.e. opens files on the source device. Sigh!
+
+
+* What does the name mean ?
+
+FUSE reFLECTor... Yet another not very imaginative name...
+
+
+* Does it work ?
+
+Some minimal testing revealed no problems. I intend to use it extensively on my
+workstation, but I will need more feedback from other users...
+
+
+* How does it work ?
+
+Just read the code. It should be simple enough this time...
+
+
+* Are there any security issues ?
+
+There should be no security issues when fuseflect is used with the default FUSE
+options, as it can only be accessed by the user who owns the fuseflect process.
+
+When used with the allow_other option, however, it should ALWAYS be used with
+default_permissions as well. _Theoretically_ this should engage the in-kernel
+file access control code, preventing users from accessing files they should not
+be able to, as long as fuseflect provides correct stat() information.
+
+
+* Isn't it dangerous ?
+
+In the kernel level - which matters the most for me - no. In the application
+level... well, you can certainly lose data if a source directory is removed, by
+e.g. unmounting a filesystem, so you'd better know what you are doing. Also the
+semantics of concurrent accesses may be altered in comparison to the source
+filesystem. To be honest, it is best suited for cases where reading files is by
+far the most common operation, rather than writing.
+
+
+* I found a bug !
+
+Good! Now report it at <nyb@users.sourceforge.net>... or even better fix it and
+send a patch!
+
+
+* How can I help ?
+
+- Test it.
+- Report any bugs.
+- Ideas, suggestions e.t.c. are welcome. Patches even more!
+- Occasionally you may drop a line to say that it worked for you. Positive
+  feedback is just as important.
+
+
+* "fuseflect" is way too similar to "fuseflt". Even some code is similar!
+
+Imagine that...
+
+
+* ...they even share some documentation!
+
+Okay, okay, I'm lazy! Happy now?
+
+
+* I don't like your coding style
+
+I don't like yours either.
+
+
+* Who wrote it ?
+
+Me, Theodoros Kalamatianos, a student at the department of Electric and Computer
+Engineering of the National Technical University of Athens. For purposes related
+to fuseflect I may be reached at <nyb@users.sourceforge.net>.
+
+
+* Under what license is it released ?
+
+Naturally, the GNU General Public License. The full text of the GPL is included
+in the fuseflect tarball.

@@ -1,0 +1,4 @@
+0.0.2:
+	* symlink() does not mess up the symlink contents any more
+	* set*uid() function per-thread, therefore the locking code is not
+	  needed. It is now completely removed.

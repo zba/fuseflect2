@@ -1,0 +1,11 @@
+1. Items in the ToDo list:
+
+* Perform filesystem semantics tests.
+
+* Perform some security-related tests.
+
+* Comments in the code.
+
+* Clean-up the code a bit (e.g. main() is a royal mess).
+
+* Request a king-size pizza for each copy of fuseflect in use :-)

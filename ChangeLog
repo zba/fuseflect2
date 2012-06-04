@@ -1,0 +1,9 @@
+Mon Jul  9 10:56:30 EEST 2007 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+	* Release 0.0.2
+	* symlink() does not mess up the symlink contents any more
+	* set*uid() function per-thread, therefore the locking code is not
+	  needed. It is now completely removed.
+
+Sat Jun 30 20:47:17 EEST 2007 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+	* Initial testing release (0.0.1)
+
