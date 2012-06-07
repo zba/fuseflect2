@@ -1,0 +1,5 @@
+fuseflect2 (0.0.1-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Alexey Zbinyakov <zba@github.com>  Thu, 07 Jun 2012 07:51:38 +0300

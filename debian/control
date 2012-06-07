@@ -1,0 +1,17 @@
+Source: fuseflect2
+Section: unknown
+Priority: extra
+Maintainer: Alexey Zbinyakov <zba@github.com>
+Build-Depends: debhelper (>= 8.0.0),libfuse-dev 
+Standards-Version: 3.9.2
+Homepage: https://github.com/zba/fuseflect2/
+Vcs-Git: https://github.com/zba/fuseflect2.git
+Vcs-Browser: https://github.com/zba/fuseflect2
+
+Package: fuseflect2
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Provides logs for directory modification
+ mirroring directory with logging option
+ it write log file of all filesystem modification to logfile, some replacement for inotify, 
+ 

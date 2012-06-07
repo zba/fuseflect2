@@ -8,7 +8,12 @@
 # the Free Software Foundation.
 #
 
-prefix := /usr/local
+prefix := $(DESTDIR)/usr
+
+ifndef DESTDIR
+    prefix := /usr/local
+endif
+
 bindir := $(prefix)/bin
 
 DEBUG :=
