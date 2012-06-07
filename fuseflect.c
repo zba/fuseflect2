@@ -18,7 +18,6 @@
 #define DEBUG		0
 
 
-
 #define _GNU_SOURCE
 
 #define FUSE_USE_VERSION 26
@@ -39,7 +38,8 @@
 #include <sys/wait.h>
 #include <sys/xattr.h>
 #include <unistd.h>
-
+#include <fuse_opt.h>
+#include <stddef.h>
 
 
 #if DEBUG
@@ -73,9 +73,50 @@ static char *src = "";
 			)
 
 
+/** keys for FUSE_OPT_ options */
+enum
+{
+   KEY_VERSION,
+   KEY_HELP,
+};
 
+struct options{
+    const char *logfile;
+    const char *srcdir;
+}options;
+#define FLECTFS_OPT(t, p, v) { t, offsetof(struct options, p), v }
+
+static struct fuse_opt flect_opts[]= {
+  FLECTFS_OPT("logfile=%s",logfile,0),
+  FLECTFS_OPT("srcdir=%s",logfile,0),
+  
+  FUSE_OPT_KEY("-V",        KEY_VERSION),
+  FUSE_OPT_KEY("--version", KEY_VERSION),
+  FUSE_OPT_KEY("-h",        KEY_HELP),
+  FUSE_OPT_KEY("--help",    KEY_HELP),
+  FUSE_OPT_END
+};
+
+
+static void usage() {
+    printf  ("Fuseflec options:\n"
+	    "	-o logfile=PATH		file to log operations\n"
+	    );
+}
+
+
+static int data_log(const char *operation,const char *path1,const char *path2){
+    if (strlen(options.logfile)==0) {return 0;}
+    FILE *fp;
+    fp=fopen(options.logfile, "a");
+    //I'm lazy to implement base64 here
+    fprintf(fp, "%s:mydelim:%s:mydelim:%s\n",operation,path1,path2);	
+    fclose(fp);
+    return 0;
+}
 static int flect_getattr(const char *path, struct stat *stbuf)
 {
+//	const char operation="getattr";
 	SRC(path)
 	RET(lstat(path, stbuf),,)
 }
@@ -126,24 +167,28 @@ static int flect_mknod(const char *path, mode_t mode, dev_t rdev)
 static int flect_mkdir(const char *path, mode_t mode)
 {
 	SRC(path)
+	data_log("mkdir",path,"");
 	IDRET(mkdir(path, mode),,)
 }
 
 static int flect_unlink(const char *path)
 {
 	SRC(path)
+	data_log("unlink",path,"");
 	RET(unlink(path),,)
 }
 
 static int flect_rmdir(const char *path)
 {
 	SRC(path)
+	data_log("rmdir",path,"");
 	RET(rmdir(path),,)
 }
 
 static int flect_symlink(const char *from, const char *to)
 {
 	SRC(to)
+	data_log("symlink",from,to);
 	IDRET(symlink(from, to),,)
 }
 
@@ -151,6 +196,7 @@ static int flect_rename(const char *from, const char *to)
 {
 	SRC(from)
 	SRC(to)
+	data_log("rename",from,to);
 	RET(rename(from, to),,)
 }
 
@@ -158,6 +204,7 @@ static int flect_link(const char *from, const char *to)
 {
 	SRC(from)
 	SRC(to)
+	data_log("link",from,to);	
 	IDRET(link(from, to),,)
 }
 
@@ -245,6 +292,14 @@ static int flect_removexattr(const char *path, const char *name)
 	SRC(path)
 	RET(lremovexattr(path, name),,)
 }
+static int flect_release(const char *path,struct fuse_file_info *info)
+{
+	SRC(path)
+	int flags;
+	flags =  (info->flags & O_WRONLY) | (info->flags & O_CREAT) | (info->flags & O_RDWR) | (info->flags & O_APPEND) ;
+	if (flags!=0) { data_log("write",path,"");}
+	return 0;
+}
 
 
 #define OP(x)		. x = flect_##x ,
@@ -273,13 +328,27 @@ static struct fuse_operations flect_oper = {
 	OP(getxattr)
 	OP(listxattr)
 	OP(removexattr)
+	OP(release)
 };
 
 int main(int argc, char *argv[])
 {
 	int i, cwd, c = argc;
+        int ret;
+	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+	/* clear structure that holds our options */
+    	    memset(&options, 0, sizeof(struct options));
 
-
+    	    if (fuse_opt_parse(&args, &options, flect_opts, NULL) == -1)
+         /** error parsing options */
+         return -1;	
+	
+	
+	
+	
+	
+	
+	
 	for (i = 1; i < (argc); ++i)
 		if (strcmp("-h", argv[i]) == 0) {
 			c = 2;
@@ -287,11 +356,13 @@ int main(int argc, char *argv[])
 		}
 
 	if (c < 3) {
-		printf("\nfuseflect %s - A FUSE filesystem for local directory mirroring\n"
-		       "Copyright (c) 2007 Theodoros V. Kalamatianos <nyb@users.sourceforge.net>\n\n",
+		printf("\nfuseflect2 %s - A FUSE filesystem for local directory mirroring\n"
+		       "Copyright (c) 2007 Theodoros V. Kalamatianos <nyb@users.sourceforge.net>\n"
+		       "              2012 Alexey Zbinyakov <zba@github.com>\n\n",
 		       VERSION);
 
 		char *args[] = { NULL, "-h", };
+		usage();
 
 		args[0] = malloc(strlen(argv[0]) + strlen(" sourcedir") + 1);
 		if (args[0] == NULL) {
@@ -307,7 +378,7 @@ int main(int argc, char *argv[])
 
 	cwd = open(".", O_RDONLY);
 
-	i = chdir(argv[1]);
+	i = chdir(args.argv[1]);
 	if (i == -1) {
 		perror("Cannot enter source directory");
 		return errno;
@@ -318,16 +389,20 @@ int main(int argc, char *argv[])
 	close(cwd);
 
 
-	char **pargv = malloc((argc - 1)* sizeof(char *));
+	/*char **pargv = malloc((argc - 1)* sizeof(char *));
 	if (pargv == NULL) {
 		perror("Command line argument processing failed");
 		return errno;
-	}
-	pargv[0] = argv[0];
-	for (i = 2; i < argc; ++i)
-		pargv[i - 1] = argv[i];
+	}  
+	pargv[0] = argv[0]; */
+	for (i = 2; i < args.argc; ++i)
+		args.argv[i - 1] = args.argv[i];
 		
 
-	umask(0);
-	return fuse_main(argc - 1, pargv, &flect_oper, NULL);
+//	umask(0);
+	
+	ret=fuse_main(args.argc - 1, args.argv, &flect_oper, NULL);
+	 fuse_opt_free_args(&args);
+	 return ret;
+	
 }
