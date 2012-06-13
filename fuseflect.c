@@ -81,14 +81,14 @@ enum
 };
 
 struct options{
-    const char *logfile;
-    const char *srcdir;
+     char *logfile;
+     char *srcdir;
 }options;
 #define FLECTFS_OPT(t, p, v) { t, offsetof(struct options, p), v }
 
 static struct fuse_opt flect_opts[]= {
   FLECTFS_OPT("logfile=%s",logfile,0),
-  FLECTFS_OPT("srcdir=%s",logfile,0),
+  FLECTFS_OPT("srcdir",srcdir,1),
   
   FUSE_OPT_KEY("-V",        KEY_VERSION),
   FUSE_OPT_KEY("--version", KEY_VERSION),
@@ -343,6 +343,7 @@ int main(int argc, char *argv[])
          /** error parsing options */
          return -1;	
 	
+		//printf ("%s\n",options.srcdir);
 	
 	
 	
@@ -377,8 +378,7 @@ int main(int argc, char *argv[])
 
 
 	cwd = open(".", O_RDONLY);
-
-	i = chdir(args.argv[1]);
+	i = chdir(args.argv[args.argc-2]);
 	if (i == -1) {
 		perror("Cannot enter source directory");
 		return errno;
@@ -395,8 +395,8 @@ int main(int argc, char *argv[])
 		return errno;
 	}  
 	pargv[0] = argv[0]; */
-	for (i = 2; i < args.argc; ++i)
-		args.argv[i - 1] = args.argv[i];
+	for (i = args.argc-2; i < args.argc; ++i)
+		args.argv[i] = args.argv[i+1];
 		
 
 //	umask(0);
