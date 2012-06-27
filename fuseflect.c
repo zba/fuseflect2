@@ -211,18 +211,21 @@ static int flect_link(const char *from, const char *to)
 static int flect_chmod(const char *path, mode_t mode)
 {
 	SRC(path)
+	data_log("chmod",path,"");
 	RET(chmod(path, mode),,)
 }
 
 static int flect_chown(const char *path, uid_t uid, gid_t gid)
 {
 	SRC(path)
+	data_log("chown",path,"");
 	RET(lchown(path, uid, gid),,)
 }
 
 static int flect_truncate(const char *path, off_t size)
 {
 	SRC(path)
+	data_log("write",path,"";
 	RET(truncate(path, size),,)
 }
 
