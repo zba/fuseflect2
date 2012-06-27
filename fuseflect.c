@@ -225,7 +225,7 @@ static int flect_chown(const char *path, uid_t uid, gid_t gid)
 static int flect_truncate(const char *path, off_t size)
 {
 	SRC(path)
-	data_log("write",path,"";
+	data_log("write",path,"");
 	RET(truncate(path, size),,)
 }
 
